@@ -1,23 +1,32 @@
-import { Search, Bell, User, ChevronDown, HelpCircle } from 'lucide-react';
+import { Search, Bell, User, ChevronDown, HelpCircle, Menu } from 'lucide-react';
 import React, { useState } from 'react';
 
-const TopBar: React.FC = () => {
+interface TopBarProps {
+  onMenuClick: () => void
+}
+const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const [profile, setProfile] = useState({
     name: "Ayomide Joseph",
     role: "System Administrator",
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDRBQNLO5G80U13E2OG_2VW1cuyPritJ3TziMTvtIEx0YlB5mUTcQhRRO7pKf1afUcEc1VK105g19dW3zYFSjkGNwBNZwn6zTNn6y1TnLDhglZUQKbIntfpVcjtMxvN2ujLz94lykq9CXilEh62OmEtPsQcB6gkHMlUYuAKeBhukiv4BnU1r1R-kTDmCO7pq4_ZL6WJmEJ8GyOYCrIN-uLJH0poheboLMP78cZHgeBVJ_ICByu5xcnGWpRzq65d7TYre8dP4lSWiHQ"
   });
 
-  const getInitial = (name:string)=>{
+  const getInitial = (name: string) => {
     const userName = name.split(" ");
-    return userName.map(n=> n[0]).join("").toUpperCase();
+    return userName.map(n => n[0]).join("").toUpperCase();
   }
 
   return (
     <>
       <header className="h-20 bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-8 sticky top-0 z-40">
-        <div className="flex-1 max-w-xl">
-          <div className="relative group">
+        <div className="flex items-center gap-4 flex-1 max-w-xl">
+          <button
+            onClick={onMenuClick}
+            className="p-2 cursor-pointer hover:bg-surface-container-low rounded-xl transition-all text-on-surface-variant lg:hidden"
+          >
+            <Menu size={24} />
+          </button>
+          <div className="relative group flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors" size={20} />
             <input
               type="text"
