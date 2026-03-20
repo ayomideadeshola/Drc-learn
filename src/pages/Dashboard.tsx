@@ -46,7 +46,7 @@ const Dashboard: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-surface-container-lowest p-6 rounded-md border border-outline-variant shadow hover:shadow-sm transition-all group"
+              className="bg-surface-container-lowest p-6 rounded-md border border-outline-variant hover:shadow-sm transition-all group"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`p-3 rounded-2xl ${stat.color} group-hover:scale-110 transition-transform`}>
@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-surface-container-lowest rounded-md border border-outline-variant p-8 shadow-sm">
+          <div className="lg:col-span-2 bg-surface-container-lowest rounded-md border border-outline-variant p-8">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-xl font-display font-bold text-on-surface">Core Learning Modules</h2>
               <button className="text-primary text-sm font-bold hover:underline">View All</button>
@@ -108,7 +108,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Live Activity Feed */}
-          <div className="bg-surface-container-lowest rounded-md border border-outline-variant p-8 shadow-sm">
+          <div className="bg-surface-container-lowest rounded-md border border-outline-variant p-8">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-xl font-display font-bold text-on-surface">Live Activity</h2>
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
@@ -119,7 +119,7 @@ const Dashboard: React.FC = () => {
                   {index !== ACTIVITIES.length - 1 && (
                     <div className="absolute left-6 top-12 bottom-[-24px] w-px bg-outline-variant"></div>
                   )}
-                  <img src={activity.avatar} alt={activity.user} className="w-12 h-12 rounded-xl object-cover shrink-0 border-2 border-surface-container-lowest shadow-sm" referrerPolicy="no-referrer" />
+                  <img src={activity.avatar} alt={activity.user} className="w-12 h-12 rounded-xl object-cover shrink-0 border-2 border-surface-container-lowest" referrerPolicy="no-referrer" />
                   <div>
                     <p className="text-sm text-on-surface">
                       <span className="font-bold">{activity.user}</span> {activity.action} <span className="font-semibold text-primary">{activity.target}</span>
