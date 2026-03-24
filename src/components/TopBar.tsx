@@ -1,10 +1,13 @@
-import { Search, Bell, User, ChevronDown, HelpCircle, Menu } from 'lucide-react';
+import { Search, Bell, User, ChevronDown, HelpCircle, Menu, LogOut, Settings } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface TopBarProps {
   onMenuClick: () => void
 }
+
 const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
   const [profile, setProfile] = useState({
     name: "Ayomide Joseph",
     role: "System Administrator",
@@ -49,24 +52,61 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 
           <div className="h-8 w-px bg-outline-variant mx-2"></div>
 
-          <button className="flex cursor-pointer items-center gap-3 p-1.5 hover:bg-surface-container-low rounded-2xl transition-all group">
-            {profile.image ? (
-              <>
+          <div className="relative">
+            <button 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex cursor-pointer items-center gap-3 p-1.5 hover:bg-surface-container-low rounded-2xl transition-all group"
+            >
+              {profile.image ? (
                 <img alt="User profile avatar" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" src={profile.image} />
-              </>
-            ) : (
-              <>
+              ) : (
                 <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-primary font-bold shadow-sm">
-                  {getInitial(profile.image)}
+                  {getInitial(profile.name)}
                 </div>
-              </>
+              )}
+              <div className="text-left hidden md:block">
+                <p className="text-sm font-semibold text-on-surface leading-none">{profile.name}</p>
+                <p className="text-[11px] text-on-surface-variant mt-1">{profile.role}</p>
+              </div>
+              <ChevronDown 
+                size={16} 
+                className={`text-on-surface-variant group-hover:text-on-surface transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
+              />
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xl py-2 z-50 animate-in fade-in zoom-in duration-200">
+                <div className="px-4 py-3 border-b border-outline-variant md:hidden">
+                  <p className="text-sm font-semibold text-on-surface">{profile.name}</p>
+                  <p className="text-xs text-on-surface-variant">{profile.role}</p>
+                </div>
+                
+                <button className="w-full flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-colors">
+                  <User size={18} />
+                  My Profile
+                </button>
+                
+                <button className="w-full flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-colors">
+                  <Settings size={18} />
+                  Settings
+                </button>
+                
+                <div className="my-1 border-t border-outline-variant"></div>
+                
+                <button className="w-full flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error/5 transition-colors">
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </div>
             )}
-            <div className="text-left hidden md:block">
-              <p className="text-sm font-semibold text-on-surface leading-none">{profile.name}</p>
-              <p className="text-[11px] text-on-surface-variant mt-1">{profile.role}</p>
-            </div>
-            <ChevronDown size={16} className="text-on-surface-variant group-hover:text-on-surface transition-colors" />
-          </button>
+            
+            {isDropdownOpen && (
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setIsDropdownOpen(false)}
+              ></div>
+            )}
+          </div>
         </div>
       </header>
     </>
