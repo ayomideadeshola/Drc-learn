@@ -1,9 +1,5 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
@@ -13,22 +9,50 @@ import Assessments from './pages/Assessments';
 import Certifications from './pages/Certifications';
 import Inbox from './pages/Inbox';
 import CourseDetail from './pages/CourseDetail';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './context/AuthContext';
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="courses" element={<Courses />} />
-          <Route path="courses/:id" element={<CourseDetail />} />
-          <Route path="users" element={<Users />} />
-          <Route path="assessments" element={<Assessments />} />
-          <Route path="certifications" element={<Certifications />} />
-          <Route path="inbox" element={<Inbox />} />
-        </Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="courses" element={<Courses />} />
+            <Route path="courses/:id" element={<CourseDetail />} />
+            
+            {/* Admin Only */}
+            <Route path="users" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Users />
+              </ProtectedRoute>
+            } />
+            
+            {/* Creator and Admin */}
+            <Route path="assessments" element={
+              <ProtectedRoute allowedRoles={['admin', 'creator']}>
+                <Assessments />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="certifications" element={<Certifications />} />
+            <Route path="inbox" element={<Inbox />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
