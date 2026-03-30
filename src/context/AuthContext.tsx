@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, {
   createContext,
   useContext,
@@ -6,14 +5,8 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { text } from "stream/consumers";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: "admin" | "creator" | "user";
-}
+import * as authApi from "../api/auth.js";
+import { User } from "../api/auth.js";
 
 interface AuthContextType {
   user: User | null;
@@ -34,13 +27,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios.get("/api/auth/me");
-        if (response.status === 200) {
-          const userData = response.data;
-          setUser(userData);
+        const userData = await authApi.getMe();
+        setUser(userData);
+      } catch (error: any) {
+        if (error.response?.status !== 401) {
+          console.error("Auth check failed:", error);
         }
-      } catch (error) {
-        console.error("Auth check failed:", error);
       } finally {
         setLoading(false);
       }
@@ -50,68 +42,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await axios.post("http://localhost:4000/api/auth/login", {
-      email,
-      password,
-    });
-    const contentType = response.headers["content-type"];
-    const text = response.data ? JSON.stringify(response.data) : "";
-    if (response.status === 200) {
-      if (contentType && contentType.includes("application/json") && text) {
-        const userData = JSON.parse(text);
-        setUser(userData);
-      } else if (!text) {
-        throw new Error("Server returned success but empty response");
-      } else {
-        throw new Error("Server returned success but invalid content type");
-      }
-    } else {
-      if (contentType && contentType.includes("application/json") && text) {
-        const errorData = JSON.parse(text);
-        throw new Error(errorData.message || "Login failed");
-      } else {
-        throw new Error(
-          `Login failed (${response.status}): ${text.substring(0, 100) || "Empty response"}`,
-        );
-      }
+    try {
+      const userData = await authApi.login({ email, password });
+      setUser(userData);
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || error.message || "Login failed";
+      throw new Error(message);
     }
   };
 
   const signup = async (email: string, password: string, name: string) => {
-    const response = await axios.post("http://localhost:4000/api/auth/signup", {
-      email,
-      password,
-      name,
-    });
-
-    if (response.status === 201) {
-      const contentType = response.headers["content-type"];
-      const text = response.data ? JSON.stringify(response.data) : "";
-      if (contentType && contentType.includes("application/json") && text) {
-        const userData = response.data;
-        setUser(userData);
-      } else if (!text) {
-        throw new Error("Server returned success but empty response");
-      } else {
-        throw new Error("Server returned success but invalid content type");
-      }
-    } else {
-      const contentType = response.headers["content-type"];
-      const text = response.data ? JSON.stringify(response.data) : "";
-      if (contentType && contentType.includes("application/json") && text) {
-        const errorData = response.data;
-        throw new Error(errorData.message || "Signup failed");
-      } else {
-        throw new Error(
-          `Signup failed (${response.status}): ${text.substring(0, 100) || "Empty response"}`,
-        );
-      }
+    try {
+      const userData = await authApi.signup({ email, password, name });
+      setUser(userData);
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || error.message || "Signup failed";
+      throw new Error(message);
     }
   };
 
   const logout = async () => {
-    await axios.post("/api/auth/logout");
-    setUser(null);
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
