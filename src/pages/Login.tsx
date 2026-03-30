@@ -112,9 +112,6 @@ const Login: React.FC = () => {
             <div className="text-[11px] text-on-surface-variant">
               <span className="font-bold text-on-surface">Admin:</span> admin@learnos.com / admin123
             </div>
-            <div className="text-[11px] text-on-surface-variant">
-              <span className="font-bold text-on-surface">Creator:</span> creator@learnos.com / creator123
-            </div>
           </div>
         </div>
       </motion.div>

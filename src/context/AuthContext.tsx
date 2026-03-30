@@ -1,26 +1,18 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
-import * as authApi from "../api/auth.js";
-import { User } from "../api/auth.js";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import * as authApi from '../api/auth.js';
+import { User } from '../api/auth.js';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  signup: (email: string, password: string, name: string, role: 'user' | 'creator') => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +23,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setUser(userData);
       } catch (error: any) {
         if (error.response?.status !== 401) {
-          console.error("Auth check failed:", error);
+          console.error('Auth check failed:', error);
         }
       } finally {
         setLoading(false);
@@ -46,19 +38,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const userData = await authApi.login({ email, password });
       setUser(userData);
     } catch (error: any) {
-      const message =
-        error.response?.data?.message || error.message || "Login failed";
+      const message = error.response?.data?.message || error.message || 'Login failed';
       throw new Error(message);
     }
   };
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string, role: 'user' | 'creator' = 'user') => {
     try {
-      const userData = await authApi.signup({ email, password, name });
+      const userData = await authApi.signup({ email, password, name, role });
       setUser(userData);
     } catch (error: any) {
-      const message =
-        error.response?.data?.message || error.message || "Signup failed";
+      const message = error.response?.data?.message || error.message || 'Signup failed';
       throw new Error(message);
     }
   };
@@ -67,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       await authApi.logout();
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error('Logout failed:', error);
     } finally {
       setUser(null);
     }
@@ -83,7 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };

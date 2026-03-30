@@ -3,27 +3,31 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { User } from "../models/user.js";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_for_dev";
 
 export const signup = async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, role } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
 
-    if (!email || !password || !name) {
+    if (!normalizedEmail || !password || !name) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const existingUser = await User.findOne({ where: { email } });
+    // Force role to 'user' or 'creator' only. Never 'admin'.
+    const finalRole = (role === "creator") ? "creator" : "user";
+
+    const existingUser = await User.findOne({ where: { email: normalizedEmail } });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       name,
-      role: "user",
+      role: finalRole,
     });
 
     const token = jwt.sign(
@@ -49,10 +53,25 @@ export const signup = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
+    console.log("Login request body:", req.body);
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
+    const normalizedEmail = email?.trim().toLowerCase();
+    const trimmedPassword = password?.trim();
+    console.log(`Login attempt for: ${normalizedEmail}`);
+    
+    const user = await User.findOne({ where: { email: normalizedEmail } });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
+      console.log(`User not found: ${normalizedEmail}`);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    console.log(`Stored hash for ${normalizedEmail}: ${user.password}`);
+    console.log(`Comparing with password: ${trimmedPassword}`);
+    const isMatch = await bcrypt.compare(trimmedPassword, user.password);
+    console.log(`Password match for ${normalizedEmail}: ${isMatch}`);
+
+    if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
