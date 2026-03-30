@@ -21,12 +21,12 @@ const Profile: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Column: Avatar & Basic Info */}
         <div className="lg:col-span-1 space-y-4">
           <div className="bg-white rounded-md border border-outline-variant p-8 text-center shadow">
             <div className="relative inline-block">
-              <div className="w-32 h-32 rounded-3xl bg-primary-container flex items-center justify-center text-primary text-4xl font-bold shadow-inner overflow-hidden">
+              <div className="w-32 h-32 rounded-3xl bg-primary-container flex items-center justify-center text-white/60 text-4xl font-bold shadow-inner overflow-hidden">
                 {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </div>
               <button className="absolute -bottom-2 -right-2 p-2 bg-white border border-outline-variant rounded-xl text-primary hover:bg-surface-container-low transition-all shadow-sm">
