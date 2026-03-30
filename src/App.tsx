@@ -1,3 +1,7 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -13,6 +17,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import Profile from './pages/Profile';
 
 export default function App() {
   return (
@@ -31,6 +36,7 @@ export default function App() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="courses" element={<Courses />} />
             <Route path="courses/:id" element={<CourseDetail />} />
+            <Route path="profile" element={<Profile />} />
             
             {/* Admin Only */}
             <Route path="users" element={

@@ -8,6 +8,7 @@ const Signup: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'user' | 'creator'>('user');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
@@ -19,7 +20,7 @@ const Signup: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await signup(email, password, name);
+      await signup(email, password, name, role);
       navigate('/login');
     } catch (err: any) {
       setError(err.message || 'Failed to create account');
@@ -43,13 +44,38 @@ const Signup: React.FC = () => {
           <p className="text-on-surface-variant mt-2">Join LearnOS and start your journey</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-8 space-y-5">
           {error && (
             <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm">
               <AlertCircle size={18} />
               <span>{error}</span>
             </div>
           )}
+
+          <div className="flex p-1 bg-surface-container-low rounded-2xl">
+            <button
+              type="button"
+              onClick={() => setRole('user')}
+              className={`flex-1 py-2.5 text-xs cursor-pointer font-bold rounded-xl transition-all ${
+                role === 'user' 
+                  ? 'bg-white text-primary shadow-sm' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              Student
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('creator')}
+              className={`flex-1 py-2.5 text-xs cursor-pointer font-bold rounded-xl transition-all ${
+                role === 'creator' 
+                  ? 'bg-primary text-white shadow-sm' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              Instructor
+            </button>
+          </div>
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1">Full Name</label>

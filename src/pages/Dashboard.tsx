@@ -30,10 +30,10 @@ const Dashboard: React.FC = () => {
             <p className="text-on-surface-variant mt-2">Welcome back, John. Here's what's happening across your organization today.</p>
           </div>
           <div className="flex gap-3">
-            <button className="px-5 py-2.5 cursor-pointer bg-surface-container-low text-on-surface font-semibold rounded-xl hover:bg-outline-variant transition-all text-sm">
+            <button className="px-5 py-2.5 cursor-pointer bg-surface-container-low text-on-surface font-semibold rounded-md hover:bg-outline-variant transition-all text-sm">
               Export Report
             </button>
-            <button className="px-5 py-2.5 cursor-pointer bg-primary text-white font-semibold rounded-xl hover:bg-primary-container transition-all shadow-lg shadow-primary/20 text-sm">
+            <button className="px-5 py-2.5 cursor-pointer bg-primary text-white font-semibold rounded-md hover:bg-primary-container transition-all shadow-lg shadow-primary/20 text-sm">
               Generate Insights
             </button>
           </div>
