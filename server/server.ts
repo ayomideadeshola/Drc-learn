@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes";
 import { initMockData } from "./models/user";
 import cors from "cors";
+import courseRoutes from "./routes/courseRoute";
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ async function startServer() {
 
   // API Routes
   app.use("/api/auth", authRoutes);
+  app.use("/courses", courseRoutes);
 
   // Vite middleware
   if (process.env.NODE_ENV !== "production") {
