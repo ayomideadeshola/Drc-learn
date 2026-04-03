@@ -16,11 +16,14 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { courseApi, Course } from "../api/courses";
+import { enrollInCourse, getMyEnrollments } from "../api/enrollment"
 
 const Courses: React.FC = () => {
   const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,8 +56,14 @@ const Courses: React.FC = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const data = await courseApi.getAll();
-      setCourses(data);
+      const [coursesData, enrollmentsData] = await Promise.all([
+        courseApi.getAll(),
+        user ? getMyEnrollments() : Promise.resolve([]),
+      ]);
+      setCourses(coursesData);
+      if (enrollmentsData) {
+        setEnrolledCourseIds(new Set(enrollmentsData.map((e: any) => e.courseId)));
+      }
     } catch (err: any) {
       setError(err.message || "Failed to fetch courses");
     } finally {
@@ -124,6 +133,28 @@ const Courses: React.FC = () => {
     }
   };
 
+  const handleEnroll = async (courseId: string) => {
+    if (!user) {
+      alert("Please login to enroll in courses");
+      return;
+    }
+    try {
+      setEnrollingId(courseId);
+      await enrollInCourse(courseId);
+      setEnrolledCourseIds((prev) => new Set([...prev, courseId]));
+      // Update local course count
+      setCourses((prev) =>
+        prev.map((c) =>
+          c.id === courseId ? { ...c, enrolled: c.enrolled + 1 } : c
+        )
+      );
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Failed to enroll in course");
+    } finally {
+      setEnrollingId(null);
+    }
+  };
+
   const canManage = user?.role === "admin" || user?.role === "creator";
 
   const filteredCourses = courses.filter((course) => {
@@ -166,7 +197,7 @@ const Courses: React.FC = () => {
             <button
               key={cat}
               onClick={() => setActiveCategory(i)}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 cursor-pointer rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
                 activeCategory === i
                   ? "bg-primary text-white shadow-md shadow-primary/20"
                   : "bg-surface-container-low text-on-surface-variant hover:bg-outline-variant hover:text-on-surface"
@@ -195,13 +226,13 @@ const Courses: React.FC = () => {
           <div className="flex bg-surface-container-low rounded-xl p-1 border border-outline-variant shrink-0">
             <button
               onClick={() => setView("grid")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${view === "grid" ? "bg-white text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}
+              className={`p-1.5 rounded-lg transition-all ${view === "grid" ? "bg-white text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}
             >
               <Grid size={16} />
             </button>
             <button
               onClick={() => setView("list")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${view === "list" ? "bg-white text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}
+              className={`p-1.5 rounded-lg transition-all ${view === "list" ? "bg-white text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}
             >
               <List size={16} />
             </button>
@@ -220,7 +251,7 @@ const Courses: React.FC = () => {
           <p className="text-sm mt-1">{error}</p>
           <button
             onClick={fetchCourses}
-            className="mt-4 text-sm cursor-pointer font-bold underline"
+            className="mt-4 text-sm font-bold underline"
           >
             Try Again
           </button>
@@ -274,7 +305,7 @@ const Courses: React.FC = () => {
                           e.stopPropagation();
                           handleOpenModal(course);
                         }}
-                        className="p-2 bg-white/90 cursor-pointer backdrop-blur-md text-primary rounded-lg hover:bg-primary hover:text-white transition-all shadow-sm"
+                        className="p-2 bg-white/90 backdrop-blur-md text-primary rounded-lg hover:bg-primary hover:text-white transition-all shadow-sm"
                       >
                         <Edit2 size={14} />
                       </button>
@@ -283,7 +314,7 @@ const Courses: React.FC = () => {
                           e.stopPropagation();
                           handleDelete(course.id);
                         }}
-                        className="p-2 bg-white/90 backdrop-blur-md text-red-400 rounded-lg hover:bg-error hover:text-white transition-all shadow-sm"
+                        className="p-2 bg-white/90 backdrop-blur-md text-error rounded-lg hover:bg-error hover:text-white transition-all shadow-sm"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -350,6 +381,37 @@ const Courses: React.FC = () => {
                     {course.price === 0 ? "Free" : `$${course.price}`}
                   </div>
                 </div>
+
+                {/* Enrollment Button */}
+                {!canManage && (
+                  <div className="mt-4">
+                    {enrolledCourseIds.has(course.id) ? (
+                      <button
+                        disabled
+                        className="w-full py-2.5 bg-emerald-500/10 text-emerald-600 font-bold rounded-xl text-sm flex items-center justify-center gap-2"
+                      >
+                        <Star size={14} fill="currentColor" />
+                        <span>Enrolled</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEnroll(course.id);
+                        }}
+                        disabled={enrollingId === course.id}
+                        className="w-full py-2.5 bg-primary text-white font-bold rounded-xl text-sm hover:bg-primary/90 transition-all shadow-md shadow-primary/10 flex items-center justify-center gap-2"
+                      >
+                        {enrollingId === course.id ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <Plus size={14} />
+                        )}
+                        <span>Enroll Now</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -555,13 +617,13 @@ const Courses: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="flex-1 py-3.5 bg-surface-container-low cursor-pointer text-on-surface font-bold rounded-2xl hover:bg-outline-variant transition-all"
+                    className="flex-1 py-3.5 bg-surface-container-low text-on-surface font-bold rounded-2xl hover:bg-outline-variant transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3.5 cursor-pointer bg-primary text-white font-bold rounded-2xl hover:bg-primary-container transition-all shadow-lg shadow-primary/20"
+                    className="flex-1 py-3.5 bg-primary text-white font-bold rounded-2xl hover:bg-primary-container transition-all shadow-lg shadow-primary/20"
                   >
                     {editingCourse ? "Update Course" : "Create Course"}
                   </button>

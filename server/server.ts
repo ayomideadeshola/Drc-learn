@@ -2,13 +2,14 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import authRoutes from "./routes/authRoutes.ts";
 import courseRoutes from "./routes/courseRoute.ts";
-import { User, initMockData } from "./models/user.js";
-
+import { User, initMockData } from "./models/index.ts";
+import enrollmentRoutes from "./routes/enrollmentRoutes.ts";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,8 +17,11 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
-
+  const PORT = 5000;
+app.use(cors({
+  origin: 'http://localhost:3000',  
+  credentials: true                 
+}));
   // Initialize mock data
   await initMockData();
 
@@ -41,7 +45,8 @@ async function startServer() {
 
   app.get("/api/test-bcrypt", async (req, res) => {
     const { password, hash } = req.query;
-    if (!password || !hash) return res.json({ error: "Missing password or hash" });
+    if (!password || !hash)
+      return res.json({ error: "Missing password or hash" });
     const match = await bcrypt.compare(password as string, hash as string);
     res.json({ match });
   });
@@ -54,16 +59,21 @@ async function startServer() {
 
   // API Routes
   app.use("/api/auth", authRoutes);
-  app.use("/api/courses", (req, res, next) => {
-    console.log(`Course Route Access: ${req.method} ${req.url}`);
-    next();
-  }, courseRoutes);
+  app.use(
+    "/api/courses",
+    (req, res, next) => {
+      console.log(`Course Route Access: ${req.method} ${req.url}`);
+      next();
+    },
+    courseRoutes,
+  );
+  app.use("/api/enrollments", enrollmentRoutes);
 
   // Catch-all API route for debugging 404s
-app.use(/^\/api\/.*/, (req, res) => {
-  console.log(`404 at ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ error: `Route ${req.originalUrl} not found` });
-});
+  app.use(/^\/api\/.*/, (req, res) => {
+    console.log(`404 at ${req.method} ${req.originalUrl}`);
+    res.status(404).json({ error: `Route ${req.originalUrl} not found` });
+  });
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
@@ -80,7 +90,7 @@ app.use(/^\/api\/.*/, (req, res) => {
     });
   }
 
-  app.listen(PORT,() => {
+  app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

@@ -81,3 +81,5 @@ Course.init(
     modelName: "Course",
   }
 );
+User.hasMany(Course, { as: "createdCourses", foreignKey: "creatorId" });
+Course.belongsTo(User, { as: "creator", foreignKey: "creatorId" });

@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -7,6 +8,7 @@ import Users from './pages/Users';
 import Assessments from './pages/Assessments';
 import Certifications from './pages/Certifications';
 import Inbox from './pages/Inbox';
+import MyCourses from './pages/Mycourses';
 import CourseDetail from './pages/CourseDetail';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -30,6 +32,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="courses" element={<Courses />} />
+            <Route path="my-courses" element={<MyCourses />} />
             <Route path="courses/:id" element={<CourseDetail />} />
             <Route path="profile" element={<Profile />} />
             

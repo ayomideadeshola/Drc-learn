@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
-import { Course } from "../models/course.js";
-import { User } from "../models/user.js";
+import { Course, User } from "../models/index.js";
 
 export const createCourse = async (req: Request, res: Response) => {
   try {
     const { title, description, price, category, thumbnail, rating, level, duration, lessons, enrolled } = req.body;
-    const creatorId = (req as any).user?.id; // Assuming auth middleware adds user to req
+    const creatorId = (req as any).user?.id; 
 
     if (!creatorId) {
       return res.status(401).json({ error: "Unauthorized" });

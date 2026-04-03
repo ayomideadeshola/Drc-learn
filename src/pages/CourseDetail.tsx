@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ChevronLeft, 
@@ -7,21 +7,74 @@ import {
   Clock, 
   FileText, 
   Download, 
-  MessageSquare, 
   Share2, 
   MoreVertical,
   Star,
   Users,
   Calendar,
-  Lock
+  Lock,
+  Plus
 } from 'lucide-react';
-import { COURSES } from '../constants';
 import { motion } from 'motion/react';
+import { courseApi, Course } from '../api/courses';
+import { enrollInCourse, getMyEnrollments } from '../api/enrollment';
+import { useAuth } from '../context/AuthContext';
 
 const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const course = COURSES.find(c => c.id === id) || COURSES[0];
+  const { user } = useAuth();
+  const [course, setCourse] = useState<Course | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'content' | 'resources' | 'discussion'>('content');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        const [courseData, enrollmentsData] = await Promise.all([
+          courseApi.getById(id),
+          user ? getMyEnrollments() : Promise.resolve([]),
+        ]);
+        setCourse(courseData);
+        if (enrollmentsData) {
+          setIsEnrolled(enrollmentsData.some((e: any) => e.courseId === id));
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch course details');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [id, user]);
+
+  const handleEnroll = async () => {
+    if (!user) {
+      alert('Please login to enroll');
+      return;
+    }
+    if (!id) return;
+    try {
+      setEnrolling(true);
+      await enrollInCourse(id);
+      setIsEnrolled(true);
+      // Update course count locally
+      if (course) {
+        setCourse({ ...course, enrolled: course.enrolled + 1 });
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to enroll');
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const isCreatorOrAdmin = user?.role === 'admin' || (user?.role === 'creator' && course?.creatorId === user?.id);
+  const hasAccess = isEnrolled || isCreatorOrAdmin;
 
   const syllabus = [
     { 
@@ -53,6 +106,24 @@ const CourseDetail: React.FC = () => {
     }
   ];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className="bg-error-container text-on-error-container p-6 rounded-3xl border border-error/20 text-center">
+        <p className="font-bold">Error loading course</p>
+        <p className="text-sm mt-1">{error || 'Course not found'}</p>
+        <Link to="/courses" className="mt-4 inline-block text-sm font-bold underline">Back to Library</Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Breadcrumbs & Actions */}
@@ -79,21 +150,41 @@ const CourseDetail: React.FC = () => {
           {/* Video Player */}
           <div className="bg-black rounded-3xl overflow-hidden aspect-video relative group shadow-2xl">
             <img 
-              src={course.image} 
+              src={course.thumbnail} 
               alt={course.title} 
               className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000" 
               referrerPolicy="no-referrer"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <button className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/30 transform hover:scale-110 transition-transform duration-300 shadow-2xl">
-                <Play className="text-white fill-white ml-1" size={32} />
-              </button>
+              {hasAccess ? (
+                <button className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/30 transform hover:scale-110 transition-transform duration-300 shadow-2xl">
+                  <Play className="text-white fill-white ml-1" size={32} />
+                </button>
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 bg-black/40 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/20">
+                    <Lock className="text-white" size={32} />
+                  </div>
+                  <button
+                    onClick={handleEnroll}
+                    disabled={enrolling}
+                    className="px-8 py-3 bg-primary text-white font-bold rounded-2xl hover:bg-primary/90 transition-all shadow-2xl flex items-center gap-2"
+                  >
+                    {enrolling ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Plus size={20} />
+                    )}
+                    <span>Enroll to Unlock</span>
+                  </button>
+                </div>
+              )}
             </div>
             <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <h4 className="text-white font-display font-bold text-lg">1.3 Core Competencies for Executives</h4>
-                  <p className="text-white/60 text-sm font-medium">Strategic Leadership & Management • Module 1</p>
+                  <p className="text-white/60 text-sm font-medium">{course.title} • Module 1</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-white text-sm font-bold">14:15</span>
@@ -119,7 +210,7 @@ const CourseDetail: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Instructor</p>
-                <p className="text-sm font-bold text-on-surface">{course.instructor}</p>
+                <p className="text-sm font-bold text-on-surface">{course.creator?.name || 'Unknown'}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Duration</p>
@@ -157,9 +248,7 @@ const CourseDetail: React.FC = () => {
             </div>
 
             <div className="prose prose-sm max-w-none text-on-surface-variant leading-relaxed">
-              <p>
-                This comprehensive executive program is designed to equip senior leaders with the frameworks and mental models necessary to navigate complex organizational challenges. Through a blend of theoretical insights and practical case studies, you will learn how to align strategy with execution, build resilient teams, and drive sustainable growth in a rapidly changing global landscape.
-              </p>
+              <p>{course.description}</p>
               <h4 className="text-on-surface font-display font-bold mt-6 mb-3">Key Learning Objectives:</h4>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 list-none p-0">
                 {[
@@ -188,7 +277,7 @@ const CourseDetail: React.FC = () => {
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
             </div>
             <h3 className="text-xl font-display font-bold mb-2">Live Training Session</h3>
-            <p className="text-white/60 text-sm mb-6">Join Dr. Sarah Jenkins for a live Q&A session on strategic frameworks.</p>
+            <p className="text-white/60 text-sm mb-6">Join your instructor for a live Q&A session on strategic frameworks.</p>
             <div className="flex items-center gap-4 mb-8">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-xl backdrop-blur-md">
                 <Calendar size={16} />
@@ -214,11 +303,11 @@ const CourseDetail: React.FC = () => {
                     <h4 className="text-sm font-bold text-on-surface">{section.title}</h4>
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">{section.duration}</span>
                   </div>
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${!hasAccess && i > 0 ? 'pointer-events-none' : ''}`}>
                     {section.lessons.map((lesson, j) => (
-                      <div key={j} className={`flex items-center gap-4 p-3 rounded-xl transition-all border ${lesson.locked ? 'opacity-50 cursor-not-allowed border-transparent' : 'hover:bg-surface-container-low border-transparent hover:border-outline-variant cursor-pointer group'}`}>
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${lesson.completed ? 'bg-emerald-500/10 text-emerald-600' : lesson.locked ? 'bg-surface-container-low text-on-surface-variant' : 'bg-primary-container text-primary'}`}>
-                          {lesson.completed ? <CheckCircle2 size={16} /> : lesson.locked ? <Lock size={16} /> : <Play size={16} />}
+                      <div key={j} className={`flex items-center gap-4 p-3 rounded-xl transition-all border ${lesson.locked || (!hasAccess && (i > 0 || j > 0)) ? 'opacity-50 cursor-not-allowed border-transparent' : 'hover:bg-surface-container-low border-transparent hover:border-outline-variant cursor-pointer group'}`}>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${lesson.completed ? 'bg-emerald-500/10 text-emerald-600' : (lesson.locked || (!hasAccess && (i > 0 || j > 0))) ? 'bg-surface-container-low text-on-surface-variant' : 'bg-primary-container text-primary'}`}>
+                          {lesson.completed ? <CheckCircle2 size={16} /> : (lesson.locked || (!hasAccess && (i > 0 || j > 0))) ? <Lock size={16} /> : <Play size={16} />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={`text-xs font-bold truncate ${lesson.completed ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>{lesson.title}</p>
