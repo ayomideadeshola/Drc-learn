@@ -1,7 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
 import bcrypt from "bcryptjs";
-import { Course } from "./course.js";
 
 export class User extends Model {
   public id!: string;
@@ -82,7 +81,12 @@ export const initMockData = async () => {
           creatorId: admin.id,
           price: 199.99,
           category: "Leadership",
-          thumbnail: "https://picsum.photos/seed/leadership/800/600"
+          thumbnail: "https://picsum.photos/seed/leadership/800/600",
+          rating: 4.8,
+          level: "Advanced",
+          duration: "12h 30m",
+          lessons: 24,
+          enrolled: 1250
         },
         {
           title: "Advanced Data Analytics",
@@ -90,7 +94,12 @@ export const initMockData = async () => {
           creatorId: admin.id,
           price: 149.99,
           category: "Analytics",
-          thumbnail: "https://picsum.photos/seed/analytics/800/600"
+          thumbnail: "https://picsum.photos/seed/analytics/800/600",
+          rating: 4.6,
+          level: "Intermediate",
+          duration: "10h 15m",
+          lessons: 18,
+          enrolled: 850
         },
         {
           title: "Full-Stack Development with React",
@@ -98,7 +107,12 @@ export const initMockData = async () => {
           creatorId: admin.id,
           price: 99.99,
           category: "Technology",
-          thumbnail: "https://picsum.photos/seed/tech/800/600"
+          thumbnail: "https://picsum.photos/seed/tech/800/600",
+          rating: 4.9,
+          level: "Beginner",
+          duration: "15h 45m",
+          lessons: 32,
+          enrolled: 2100
         }
       ]);
       console.log("Mock courses created.");
@@ -109,3 +123,8 @@ export const initMockData = async () => {
     console.error("Unable to connect to the database:", error);
   }
 };
+
+// Define associations at the end to avoid circular dependency issues
+import { Course } from "./course.js";
+User.hasMany(Course, { foreignKey: "creatorId" });
+Course.belongsTo(User, { as: "creator", foreignKey: "creatorId" });

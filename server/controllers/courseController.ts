@@ -4,7 +4,7 @@ import { User } from "../models/user.js";
 
 export const createCourse = async (req: Request, res: Response) => {
   try {
-    const { title, description, price, category, thumbnail } = req.body;
+    const { title, description, price, category, thumbnail, rating, level, duration, lessons, enrolled } = req.body;
     const creatorId = (req as any).user?.id; // Assuming auth middleware adds user to req
 
     if (!creatorId) {
@@ -18,6 +18,11 @@ export const createCourse = async (req: Request, res: Response) => {
       price,
       category,
       thumbnail,
+      rating,
+      level,
+      duration,
+      lessons,
+      enrolled,
     });
 
     res.status(201).json(course);
@@ -27,12 +32,15 @@ export const createCourse = async (req: Request, res: Response) => {
 };
 
 export const getAllCourses = async (req: Request, res: Response) => {
+  console.log("getAllCourses controller hit");
   try {
     const courses = await Course.findAll({
       include: [{ model: User, as: "creator", attributes: ["name", "email"] }],
     });
+    console.log(`Found ${courses.length} courses`);
     res.json(courses);
   } catch (error: any) {
+    console.error("Error in getAllCourses:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -57,7 +65,7 @@ export const getCourseById = async (req: Request, res: Response) => {
 export const updateCourse = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, description, price, category, thumbnail } = req.body;
+    const { title, description, price, category, thumbnail, rating, level, duration, lessons, enrolled } = req.body;
     const userId = (req as any).user?.id;
 
     const course = await Course.findByPk(id);
@@ -77,6 +85,11 @@ export const updateCourse = async (req: Request, res: Response) => {
       price,
       category,
       thumbnail,
+      rating,
+      level,
+      duration,
+      lessons,
+      enrolled,
     });
 
     res.json(course);

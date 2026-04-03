@@ -10,6 +10,11 @@ export interface Course {
   price: number;
   category: string;
   thumbnail: string;
+  rating: number;
+  level: "Beginner" | "Intermediate" | "Advanced";
+  duration: string;
+  lessons: number;
+  enrolled: number;
   createdAt: string;
   updatedAt: string;
   creator?: {

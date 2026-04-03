@@ -20,6 +20,8 @@
     "sequelize": "^6.37.8"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/react": "^19.2.14",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2"

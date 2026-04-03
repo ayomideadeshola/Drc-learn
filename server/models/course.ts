@@ -1,22 +1,27 @@
-import { DataTypes, Model} from "sequelize";
-import sequelize from "../config/database";
-import { User } from "./user";
+import { DataTypes, Model } from "sequelize";
+import sequelize from "../config/database.js";
+import { User } from "./user.js";
 
 export class Course extends Model {
-    public id!: number;
-    public title!: string;
-    public description!: string;
-    public creatorId!: number;
-    public price!: number;
-    public category!: string;
-    public thumbnail!: string;
+  public id!: string;
+  public title!: string;
+  public description!: string;
+  public creatorId!: string;
+  public price!: number;
+  public category!: string;
+  public thumbnail!: string;
+  public rating!: number;
+  public level!: "Beginner" | "Intermediate" | "Advanced";
+  public duration!: string;
+  public lessons!: number;
+  public enrolled!: number;
 
-    public readonly createdAt!: Date;
-    public readonly updatedAt!: Date;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
 Course.init(
-    {
+  {
     id: {
       type: DataTypes.STRING,
       primaryKey: true,
@@ -34,7 +39,7 @@ Course.init(
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: User,
+        model: "Users",
         key: "id",
       },
     },
@@ -50,12 +55,29 @@ Course.init(
       type: DataTypes.STRING,
       defaultValue: "https://picsum.photos/seed/course/800/600",
     },
+    rating: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0.0,
+    },
+    level: {
+      type: DataTypes.ENUM("Beginner", "Intermediate", "Advanced"),
+      defaultValue: "Beginner",
+    },
+    duration: {
+      type: DataTypes.STRING,
+      defaultValue: "0h",
+    },
+    lessons: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    enrolled: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
   },
   {
     sequelize,
     modelName: "Course",
   }
 );
-
-User.hasMany(Course, { foreignKey: "creatorId" });
-Course.belongsTo(User, { as: "creator", foreignKey: "creatorId" });

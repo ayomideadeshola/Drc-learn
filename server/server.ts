@@ -4,10 +4,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import authRoutes from "./routes/authRoutes";
-import { initMockData } from "./models/user";
-import cors from "cors";
-import courseRoutes from "./routes/courseRoute";
+import bcrypt from "bcryptjs";
+import authRoutes from "./routes/authRoutes.ts";
+import courseRoutes from "./routes/courseRoute.ts";
+import { User, initMockData } from "./models/user.js";
 
 dotenv.config();
 
@@ -16,14 +16,7 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = 4000;
-
-  app.use(
-    cors({
-      origin: "http://localhost:3000",
-      credentials: true,
-    })
-  );
+  const PORT = 3000;
 
   // Initialize mock data
   await initMockData();
@@ -37,7 +30,7 @@ async function startServer() {
     next();
   });
 
-  // Test routes
+  // Test route
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
@@ -46,11 +39,33 @@ async function startServer() {
     res.json({ message: "API is working" });
   });
 
+  app.get("/api/test-bcrypt", async (req, res) => {
+    const { password, hash } = req.query;
+    if (!password || !hash) return res.json({ error: "Missing password or hash" });
+    const match = await bcrypt.compare(password as string, hash as string);
+    res.json({ match });
+  });
+
+  app.get("/api/debug-admin", async (req, res) => {
+    const admin = await User.findOne({ where: { email: "admin@learnos.com" } });
+    if (!admin) return res.json({ error: "Admin not found" });
+    res.json({ email: admin.email, role: admin.role, hash: admin.password });
+  });
+
   // API Routes
   app.use("/api/auth", authRoutes);
-  app.use("/courses", courseRoutes);
+  app.use("/api/courses", (req, res, next) => {
+    console.log(`Course Route Access: ${req.method} ${req.url}`);
+    next();
+  }, courseRoutes);
 
-  // Vite middleware
+  // Catch-all API route for debugging 404s
+app.use(/^\/api\/.*/, (req, res) => {
+  console.log(`404 at ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ error: `Route ${req.originalUrl} not found` });
+});
+
+  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -65,10 +80,9 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT,() => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
 startServer();
-
