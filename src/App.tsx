@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -8,13 +7,14 @@ import Users from './pages/Users';
 import Assessments from './pages/Assessments';
 import Certifications from './pages/Certifications';
 import Inbox from './pages/Inbox';
-import MyCourses from './pages/Mycourses';
+import MyCourses from './pages/MyCourses';
 import CourseDetail from './pages/CourseDetail';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import Profile from './pages/Profile';
+import CoursePlayer from './components/CoursePlayer';
 
 export default function App() {
   return (
@@ -24,6 +24,12 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           
+          <Route path="/learn/:courseId" element={
+            <ProtectedRoute>
+              <CoursePlayer />
+            </ProtectedRoute>
+          } />
+
           <Route path="/" element={
             <ProtectedRoute>
               <Layout />

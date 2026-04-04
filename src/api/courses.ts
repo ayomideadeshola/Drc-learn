@@ -44,4 +44,8 @@ export const courseApi = {
     const response = await http.delete(`${API_URL}/${id}`);
     return response.data;
   },
+  getEnrolled: async () => {
+    const response = await http.get<any[]>('/enrollments/my-courses');
+    return response.data;
+  },
 };
