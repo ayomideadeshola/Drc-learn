@@ -144,7 +144,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
         {(user?.role === "admin" || user?.role === "creator") && (
           <div className="px-4 mb-6">
-            <button className="w-full bg-secondary hover:bg-secondary/90 text-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-secondary/20 group">
+            <button className="w-full bg-secondary hover:bg-secondary/90 text-white/60 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-secondary/20 group">
               <Plus
                 size={20}
                 className="group-hover:rotate-90 transition-transform duration-300"

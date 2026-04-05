@@ -11,6 +11,7 @@ import {
   ArrowLeft 
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import http from "../lib/http.js";
 
 interface Lesson {
   id: string;
@@ -39,13 +40,9 @@ export default function CoursePlayer() {
   useEffect(() => {
     const fetchLessons = async () => {
       try {
-        const response = await fetch(`/api/lessons/course/${courseId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
+        const response = await http.get(`/lessons/course/${courseId}`);
+        if (response.status === 200) {
+          const data = response.data;
           setLessons(data);
           
           // Find first uncompleted lesson
@@ -63,9 +60,9 @@ export default function CoursePlayer() {
 
     const fetchCourse = async () => {
       try {
-        const response = await fetch(`/api/courses/${courseId}`);
-        if (response.ok) {
-          const data = await response.json();
+        const response = await http.get(`/courses/${courseId}`);
+        if (response.status === 200) {
+          const data = response.data;
           setCourse(data);
         }
       } catch (error) {
@@ -83,14 +80,9 @@ export default function CoursePlayer() {
     if (!currentLesson) return;
 
     try {
-      const response = await fetch(`/api/lessons/${currentLesson.id}/complete`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await http.post(`/lessons/${currentLesson.id}/complete`);
 
-      if (response.ok) {
+      if (response.status === 200) {
         const updatedLessons = [...lessons];
         updatedLessons[currentLessonIndex].isCompleted = true;
         setLessons(updatedLessons);
